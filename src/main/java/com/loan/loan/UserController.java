@@ -6,6 +6,7 @@ import java.util.concurrent.ExecutionException;
 
 import org.springframework.web.bind.annotation.*;
 
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.api.core.ApiFuture;
 import com.google.cloud.firestore.DocumentReference;
 import com.google.cloud.firestore.DocumentSnapshot;
@@ -50,7 +51,7 @@ public class UserController {
 	}
 	
 	 @GetMapping("/getAll")
-	    public ArrayList<User> getAllPatients() throws InterruptedException, ExecutionException {
+	    public ArrayList<User> getAllUsers() throws InterruptedException, ExecutionException {
 		 ArrayList<User> users = new ArrayList<User>();
 	    	ApiFuture<QuerySnapshot> query = FirestoreClient.getFirestore().collection(COL_NAME).get();
 	    	QuerySnapshot querySnapshot = query.get();
@@ -62,16 +63,33 @@ public class UserController {
 	    }
 
 	    @PutMapping("/updateUser")
-	    public String updatePatient(@RequestBody User user  ) throws InterruptedException, ExecutionException {
+	    public String updateUser(@RequestBody User user  ) throws InterruptedException, ExecutionException {
 	    	 Firestore dbFirestore = FirestoreClient.getFirestore();
 	         ApiFuture<WriteResult> collectionsApiFuture = dbFirestore.collection(COL_NAME).document(user.getCpf()).set(user);
 	         return collectionsApiFuture.get().getUpdateTime().toString();
 	    }
 
 	    @DeleteMapping("/deleteUser")
-	    public String deletePatient(@RequestParam String cpf){
+	    public String deleteUser(@RequestParam String cpf){
 	    	 Firestore dbFirestore = FirestoreClient.getFirestore();
 	         ApiFuture<WriteResult> writeResult = dbFirestore.collection(COL_NAME).document(cpf).delete();
 	         return "Document with User ID "+cpf+" has been deleted";	    }
+	    
+	    @PostMapping("/loginUser")
+	    public User loginUser(@RequestBody ObjectNode json) throws InterruptedException, ExecutionException {
+	    	String email = json.get("email").asText();
+	    	String senha = json.get("password").asText();
+	    	User response =new User();
+	    	ApiFuture<QuerySnapshot> query = FirestoreClient.getFirestore().collection(COL_NAME).get();
+	    	QuerySnapshot querySnapshot = query.get();
+	    	List<QueryDocumentSnapshot> documents = querySnapshot.getDocuments();
+	    	for (QueryDocumentSnapshot document : documents) {
+	    		User user = document.toObject(User.class);
+	    		if (user.getEmail().equals(email) && user.getPassword().equals(senha))  {
+	    			response = document.toObject(User.class);
+	    		}
+	    	}
+	    	return response;
+	    }
 
 }

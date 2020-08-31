@@ -28,7 +28,12 @@ import models.User;
 public class LoanController {
 
 	public static final String COL_NAME = "loans";
- 
+	
+	
+	@GetMapping("/")
+	public String helloWorld() {
+		return "Hello World";
+	}
 	@PostMapping("/addLoan")
 	public String addLoan(@RequestBody Loan loan) throws InterruptedException, ExecutionException {
 		Firestore dbFirestore = FirestoreClient.getFirestore();
